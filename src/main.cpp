@@ -105,7 +105,7 @@ int main() {
          // std::cout << "steer value: " << steer_value << std::endl;
           
           throttle_pid.UpdateError(cte);  //n.b. use abs with throttle
-          double throttle_value = .4 + throttle_pid.TotalError();
+          double throttle_value = .3 + throttle_pid.TotalError();
           
           throttle_value = (throttle_value < .1) ? .1 : throttle_value;  //throttle min of .1
          // throttle_value = .3;
