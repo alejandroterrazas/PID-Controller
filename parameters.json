@@ -1,0 +1,14 @@
+{"steering" : {
+      "Kp": 0.095,
+      "Ki": 0.00035,
+      "Kd": 1.0},
+ "throttle" : {
+      "Kp": 0.1,
+      "Ki": 0.0,
+      "Kd": 0.05},
+"twiddle" : {
+      "offset": 50,
+      "interval": 1,
+      "max_n": 50}
+}
+

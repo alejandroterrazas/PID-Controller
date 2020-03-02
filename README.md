@@ -106,16 +106,22 @@ bool second_part(int index, double error) {
 
 For the twiddle program, The size of the vector is up to the user, as is the range of offsets and the range on intervals used.  The program uses random sampling to obtain a mix of these values; therefore, it 100 is listed for the offset, each iteration will have an offset from 0:100 frames.  An improvement would be to specify a beginngin frame; however, long offsets increase the time required and is not practical given GPU time allotment.  
 
+
+## Parameter File: parameters.json
+
+A json file called **parameters.json** is used to supply the Kp, Ki, and Kd parameters for steering and throttle, as well as the twiddle parameters (offset, interval, and max_n).  The file is useful to tuning hyperparameters.  Default values are included.  The values are read in the function read_parameters() in both main.cpp and twiddle.cpp.
 ## Basic Build Instructions
 
 1. Clone this repo.
 2. Make a build directory: `mkdir build && cd build`
 3. Compile: `cmake .. && make`
-4. Run it: `./build/pid .095, .00035, 1. .1 0 .3`.
+4. Run it: `./build/pid 
 
-5. To run Twiddle: ./twiddle <parameter list> (see below) The executiable is in the main directory, not source. 
+5. To run Twiddle: ./twiddle 
 
-I provide ./twiddle as an executable only. To run it:  `./twiddle` with 6 arguments, initial Kp, Ki, and Kd values and offset_max, interval_max, and max_n. For example `./twiddle .095, .00035, .1 200 4 100`. The offset_max and interval_max variables are the upper range for the randomization of offset and interval mentioned above.  The max_n variable is the size of the vector of error terms used to adjust p and delta_p.  A larger value of max_n provides more stable estimates and the cost of time.  
+The twiddle executiable is in the main directory so it is not overwritten by clean.sh. 
+
+I provide ./twiddle as an executable only. To run it:  `./twiddle` with 6 arguments in the parameters.json file: initial Kp, Ki, and Kd values and offset_max, interval_max, and max_n. For example `./twiddle`. The offset_max and interval_max variables are the upper range for the randomization of offset and interval mentioned above.  The max_n variable is the size of the vector of error terms used to adjust p and delta_p.  A larger value of max_n provides more stable estimates and the cost of time.  
 
 ## Web sockets interface.
 Some complexity in understanding `main.cpp` comes from its interface to the simulator. For example, the following function call receives incoming data from the simulator: `h.onMessage([&map_waypoints_x,&map_waypoints_y,&map_waypoints_s,

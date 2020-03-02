@@ -6,6 +6,7 @@
 #include "json.hpp"
 #include "PID.h"
 #include "helpers.h"
+#include <fstream>
 
 // for convenience
 using nlohmann::json;
@@ -44,7 +45,7 @@ string hasData(string s) {
 void print_vals(string msg) {
   std::cout << msg << "; parameter index: " << parameter_index << std::endl;
   std::cout << "p: " << p[0] << "," << p[1] << "," << p[2] << std::endl;
-  std::cout << "dp: " << dp[0] << "," << dp[1] << "," << dp[2] << std::endl;  
+  std::cout << "delta_p: " << delta_p[0] << "," << delta_p[1] << "," << delta_p[2] << std::endl;  
 }
 
 
@@ -53,12 +54,12 @@ bool first_part(int index, double error) {
   bool flag;
   if (error < best_error) {  
     best_error = error;
-    dp[index] *= up_multiplier;
+    delta_p[index] *= up_multiplier;
     print_vals("first part: error is better");
     flag = true;
   } else { //!error is worse       
-    p[index] -= 2*dp[index];
-    dp[index] *= down_multiplier;
+    p[index] -= 2*delta_p[index];
+    delta_p[index] *= down_multiplier;
     print_vals("first part error is worse");
     flag = false;
   }
@@ -68,11 +69,11 @@ bool first_part(int index, double error) {
 bool second_part(int index, double error) {
   if (error < best_error) {
     best_error = error;
-    dp[index] *= up_multiplier;
+    delta_p[index] *= up_multiplier;
     print_vals("second part: error is better");
   } else {
-    p[index] += dp[parameter_index];
-    dp[index] *= down_multiplier;
+    p[index] += delta_p[parameter_index];
+    delta_p[index] *= down_multiplier;
     print_vals("error > best_error--set first = true");
   }  //end of best_error
   return true; //resets flag  
@@ -88,30 +89,42 @@ int generate_offset_skip(int offset_max) {
   return offset_distribution(generator2);
  }
 
-int main(int argc, char *argv[]) {
-  uWS::Hub h;
+void read_parameters() {
+  
+   std::ifstream i("./parameters.json");
 
-  PID pid;
+   //std::ifstream i("./parameters.json", std::ifstream::binary);
+   json parameters = json::parse(i);
   
-  steering_Kp_init = atof(argv[1]);
-  steering_Ki_init = atof(argv[2]);
-  steering_Kd_init = atof(argv[3]); 
+   steering_Kp_init =  parameters["steering"]["Kp"]; 
+   steering_Ki_init =  parameters["steering"]["Ki"]; 
+   steering_Kd_init =  parameters["steering"]["Kd"];  
   
-  p = {steering_Kp_init, steering_Ki_init, steering_Kd_init}; 
-  delta_p = {steering_Kp_init*0.1, steering_Ki_init*0.1, steering_Kd_init*0.1};
+   offset =  parameters["twiddle"]["offset"]; 
+   interval =  parameters["twiddle"]["interval"]; 
+   max_n =  parameters["twiddle"]["max_n"]; 
  
-  offset = atoi(argv[4]);
-  interval = atoi(argv[5]);
-  max_n = atoi(argv[6]); 
   
   std::cout  << "steering_Kp_init: " << steering_Kp_init 
              << " steering_Ki_init: " << steering_Ki_init 
              << " steering_Kd_init: " << steering_Kd_init
              << " offset: " << offset 
              << " interval_skip: " << interval 
-             << " max_n: " << max_n << std::endl;
+             << " max_n: " << max_n << std::endl; 
+ 
+}
+
+
+int main() {
+  uWS::Hub h;
+
+  PID pid;
+   
+  read_parameters();  //reads a json file with twiddle parameters
   
-  
+  p = {steering_Kp_init, steering_Ki_init, steering_Kd_init}; 
+  delta_p = {steering_Kp_init*0.1, steering_Ki_init*0.1, steering_Kd_init*0.1};
+   
   h.onMessage([&pid](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, 
                      uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.

@@ -6,6 +6,8 @@
 #include "json.hpp"
 #include "PID.h"
 #include "helpers.h"
+#include <fstream>
+
 
 // for convenience
 using nlohmann::json;
@@ -33,27 +35,40 @@ string hasData(string s) {
   return "";
 }
 
-int main(int argc, char *argv[]) {
-  uWS::Hub h;
 
-  PID steering_pid;
-  PID throttle_pid;
+void read_parameters() {
   
-  steering_Kp_init = atof(argv[1]);
-  steering_Ki_init = atof(argv[2]);
-  steering_Kd_init = atof(argv[3]); 
+   std::ifstream i("./parameters.json");
+
+   //std::ifstream i("./parameters.json", std::ifstream::binary);
+   json parameters = json::parse(i);
   
-  throttle_Kp_init = atof(argv[4]);
-  throttle_Ki_init = atof(argv[5]);
-  throttle_Kd_init = atof(argv[6]); 
+   steering_Kp_init =  parameters["steering"]["Kp"]; 
+   steering_Ki_init =  parameters["steering"]["Ki"]; 
+   steering_Kd_init =  parameters["steering"]["Kd"];  
   
-  std::cout  << "steering_Kp_init: " << steering_Kp_init 
+   throttle_Kp_init =  parameters["throttle"]["Kp"]; 
+   throttle_Ki_init =  parameters["throttle"]["Ki"]; 
+   throttle_Kd_init =  parameters["throttle"]["Kd"]; 
+  
+  
+   std::cout  << "steering_Kp_init: " << steering_Kp_init 
              << " steering_Ki_init: " << steering_Ki_init 
              << " steering_Kd_init: " << steering_Kd_init
              << " throttle_Kp_init: " << throttle_Kp_init 
              << " throttle_Ki_init: " << throttle_Ki_init 
              << " throttle_Kd_init: " << throttle_Kd_init << std::endl;
-   
+
+}
+
+int main() {
+  uWS::Hub h;
+
+  PID steering_pid;
+  PID throttle_pid;
+  
+  read_parameters();  
+                              
   h.onMessage([&steering_pid, &throttle_pid](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, 
                      uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
